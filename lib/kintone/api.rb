@@ -30,9 +30,16 @@ class Kintone::Api
     :file
   ].freeze
 
-  def initialize(domain, user, password = nil)
+  # 次のいずれかでコンストラクト
+  # domain, user
+  # domain, user, password
+  # domain, user, password, { basic_user, basic_password }
+  # domain, user, { password, basic_user, basic_password }
+  def initialize(domain, user, *rest_args)
+    password, basic_user, basic_password = parse_initial_args(rest_args)
     @connection =
       Faraday.new(url: "https://#{domain}", headers: build_headers(user, password)) do |builder|
+        builder.use Faraday::Request::BasicAuthentication, basic_user, basic_password if basic_user && basic_password
         builder.request :url_encoded
         builder.request :multipart
         builder.response :json, content_type: /\bjson$/
@@ -120,6 +127,17 @@ class Kintone::Api
       { 'X-Cybozu-Authorization' => Base64.encode64("#{user}:#{password}") }
     else # APIトークン認証
       { 'X-Cybozu-API-Token' => user }
+    end
+  end
+
+  def parse_initial_args(args)
+    case args.length
+    when 0 then nil
+    when 1
+      password_or_options = args.first
+      password_or_options.instance_of?(String) ? password_or_options : password_or_options.values_at(:password, :basic_user, :basic_password)
+    when 2
+      [args.first] + args.second.values_at(:basic_user, :basic_password)
     end
   end
 end
