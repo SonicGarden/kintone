@@ -108,6 +108,10 @@ class Kintone::Api
     ACCESSIBLE_COMMAND.include?(name) || super
   end
 
+  def update_headers(headers)
+    @connection.headers.update(headers)
+  end
+
   class CommandAccessor
     extend Kintone::Command::Accessor
   end
