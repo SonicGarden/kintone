@@ -5,29 +5,16 @@ require 'json'
 require 'kintone/command/accessor'
 require 'kintone/api/guest'
 require 'kintone/query'
+require 'kintone/kintone_error'
 
 class Kintone::Api
   BASE_PATH = '/k/v1/'.freeze
   COMMAND = '%s.json'.freeze
   ACCESSIBLE_COMMAND = [
-    :record,
-    :records,
-    :form,
-    :app_acl,
-    :record_acl,
-    :field_acl,
-    :template_space,
-    :space,
-    :space_body,
-    :space_thread,
-    :space_members,
-    :guests,
-    :app,
-    :apps,
-    :apis,
-    :bulk_request,
-    :bulk,
-    :file
+    :record, :records, :form, :app_acl, :record_acl,
+    :field_acl, :template_space, :space, :space_body, :space_thread,
+    :space_members, :guests, :app, :apps, :apis,
+    :bulk_request, :bulk, :file
   ].freeze
 
   # 次のいずれかでコンストラクト
@@ -61,6 +48,7 @@ class Kintone::Api
         request.url url
         request.params = params
       end
+    raise Kintone::KintoneError.new(response.body, response.status) if response.status != 200
     response.body
   end
 
@@ -71,6 +59,7 @@ class Kintone::Api
         request.headers['Content-Type'] = 'application/json'
         request.body = body.to_json
       end
+    raise Kintone::KintoneError.new(response.body, response.status) if response.status != 200
     response.body
   end
 
@@ -81,6 +70,7 @@ class Kintone::Api
         request.headers['Content-Type'] = 'application/json'
         request.body = body.to_json
       end
+    raise Kintone::KintoneError.new(response.body, response.status) if response.status != 200
     response.body
   end
 
@@ -91,6 +81,7 @@ class Kintone::Api
         request.headers['Content-Type'] = 'application/json'
         request.body = body.to_json
       end
+    raise Kintone::KintoneError.new(response.body, response.status) if response.status != 200
     response.body
   end
 
@@ -101,6 +92,7 @@ class Kintone::Api
         request.headers['Content-Type'] = 'multipart/form-data'
         request.body = { file: Faraday::UploadIO.new(path, content_type, original_filename) }
       end
+    raise Kintone::KintoneError.new(response.body, response.status) if response.status != 200
     response.body['fileKey']
   end
 
