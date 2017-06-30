@@ -26,7 +26,7 @@ class Kintone::Api
       :file
     ].freeze
 
-    def_delegators :@api, :get, :post, :put, :delete, :post_file
+    def_delegators :@api, :get, :post, :put, :delete, :post_file, :update_headers
 
     def initialize(space_id, api)
       @api = api
