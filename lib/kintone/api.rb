@@ -14,7 +14,7 @@ class Kintone::Api
     :record, :records, :form, :app_acl, :record_acl,
     :field_acl, :template_space, :space, :space_body, :space_thread,
     :space_members, :guests, :app, :apps, :apis,
-    :bulk_request, :bulk, :file
+    :bulk_request, :bulk, :file, :preview_form
   ].freeze
 
   # 次のいずれかでコンストラクト
@@ -32,6 +32,8 @@ class Kintone::Api
         builder.response :json, content_type: /\bjson$/
         builder.adapter :net_http
       end
+
+    yield(@connection) if block_given?
   end
 
   def get_url(command)
@@ -46,7 +48,9 @@ class Kintone::Api
     response =
       @connection.get do |request|
         request.url url
-        request.params = params
+        # NOTE: Request URI Too Large 対策
+        request.headers['Content-Type'] = 'application/json'
+        request.body = params.to_h.to_json
       end
     raise Kintone::KintoneError.new(response.body, response.status) if response.status != 200
     response.body
@@ -120,7 +124,7 @@ class Kintone::Api
 
   def build_headers(user, password)
     if password # パスワード認証
-      { 'X-Cybozu-Authorization' => Base64.encode64("#{user}:#{password}") }
+      { 'X-Cybozu-Authorization' => Base64.strict_encode64("#{user}:#{password}") }
     else # APIトークン認証
       { 'X-Cybozu-API-Token' => user }
     end

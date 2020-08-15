@@ -39,11 +39,11 @@ api = Kintone::Api.new("example.cybozu.com", "authtoken")
 - [Record delete](#record_delete)
 - [Bulk request](#bulk_request)
 - [File](#file)
-- [Format retrieval](#format_retrieval)
 - [Permissions](#permissions)
 - [Space management](#space_management)
 - [Guests](#guests)
 - [Application information](#application_information)
+- [Form structure](#form_structure)
 - [API information](#api_information)
 
 ### <a name="record_retrieval"> Record retrieval
@@ -110,9 +110,9 @@ operator symbol | query helper
 --- | ---
 = | field(:code) == other
 != | field(:code) != other
-> | field(:code) > other
+&gt; | field(:code) > other
 < | field(:code) < other
->= | field(:code) >= other
+&gt;= | field(:code) >= other
 <= | field(:code) <= other
 in | field(:code).in(["A", "B"])
 not in | field(:code).not_in(["A", "B"])
@@ -125,6 +125,7 @@ or | or!
 function | query helper
 --- | ---
 LOGINUSER() | login_user
+PRIMARY_ORGANIZATION() | primary_organization
 NOW() | now
 TODAY() | today
 THIS_MONTH() | this_month
@@ -225,8 +226,8 @@ api.records.delete(app, ids, revisions: revisions)
 ### <a name="bulk_request"> Bulk request
 
 ```ruby
-requests = {"requests" => [{"method" => "POST", ...}, {"method" => "PUT", ...}]}
-api.bulk.request(requests) # => {"results" => [...]}
+requests = [{"method" => "POST", ...}, {"method" => "PUT", ...}]
+api.bulk.request(requests) # => [...]
 ```
 
 ### <a name="file"> File
@@ -237,13 +238,6 @@ file_key = api.file.register("/path/to/file", "text/plain", "file.txt")
 
 # File download
 file = api.file.get(file_key)
-```
-
-### <a name="format_retrieval"> Format retrieval
-
-```ruby
-app = 4
-api.form.get(app) # => {"properties" => [{...}, ...]}
 ```
 
 ### <a name="permissions"> Permissions
@@ -322,6 +316,15 @@ api.app.get(id) # => {"appId" => "4", "code" => "", ...}
 
 name = "test"; codes = ["FOO", "BAR"]
 api.apps.get({ name: name, codes: codes }) # => { "apps" => [{...}, ...] }
+```
+
+### <a name="form_structure"> Form structure
+
+```ruby
+app = 1
+api.form.get(app) # => {"properties" => [{...}, ...]}
+
+api.preview_form.get(app) # => {"properties" => [{...}, ...]}
 ```
 
 ### <a name="api_information"> API information

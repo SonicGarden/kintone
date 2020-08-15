@@ -32,12 +32,22 @@ describe Kintone::Api do
 
       context '引数がnilの時' do
         let(:space) { nil }
-        xit { expect(subject.instance_variable_get(:@guest_path)).to eq('/k/guest//v1/') }
+        it { expect(subject.instance_variable_get(:@guest_path)).to eq('/k/guest/0/v1/') }
       end
 
-      context '引数に数字以外の文字が含まれる時' do
+      context '引数が数字の時' do
         let(:space) { '2.1' }
-        xit { expect(subject.instance_variable_get(:@guest_path)).to eq('/k/guest//v1/') }
+        it { expect(subject.instance_variable_get(:@guest_path)).to eq('/k/guest/2/v1/') }
+      end
+
+      context '引数が数値に変換できる文字列の時' do
+        let(:space) { '21No' }
+        it { expect(subject.instance_variable_get(:@guest_path)).to eq('/k/guest/21/v1/') }
+      end
+
+      context '引数が数値に変換できる文字列でないとき時' do
+        let(:space) { 'No21' }
+        it { expect(subject.instance_variable_get(:@guest_path)).to eq('/k/guest/0/v1/') }
       end
     end
 
@@ -48,7 +58,7 @@ describe Kintone::Api do
           'https://www.example.com/k/v1/path'
         )
           .with(
-            query: query,
+            body: params.to_h.to_json,
             headers: { 'X-Cybozu-Authorization' => 'QWRtaW5pc3RyYXRvcjpjeWJvenU=' }
           )
           .to_return(
@@ -64,29 +74,18 @@ describe Kintone::Api do
 
       context 'with some params' do
         let(:params) { { 'p1' => 'abc', 'p2' => 'def' } }
-        let(:query) { 'p1=abc&p2=def' }
 
         it { is_expected.to eq 'abc' => 'def' }
       end
 
       context 'with empty params' do
         let(:params) { {} }
-        let(:query) { nil }
 
         it { is_expected.to eq 'abc' => 'def' }
       end
 
       context 'with nil' do
         let(:params) { nil }
-        let(:query) { nil }
-
-        it { expect { subject }.to raise_error NoMethodError }
-      end
-
-      context 'with no params' do
-        subject { target.get(path) }
-
-        let(:query) { nil }
 
         it { is_expected.to eq 'abc' => 'def' }
       end
@@ -98,7 +97,7 @@ describe Kintone::Api do
             'https://www.example.com/k/v1/path'
           )
             .with(
-              query: query,
+              body: params.to_json,
               headers: { 'X-Cybozu-Authorization' => 'QWRtaW5pc3RyYXRvcjpjeWJvenU=' }
             )
             .to_return(
@@ -108,7 +107,6 @@ describe Kintone::Api do
         end
 
         let(:params) { {} }
-        let(:query) { nil }
 
         it { expect { subject }.to raise_error Kintone::KintoneError }
       end
@@ -404,6 +402,12 @@ describe Kintone::Api do
 
       it { is_expected.to be_a_kind_of(Kintone::Command::File) }
     end
+
+    describe '#preview_form' do
+      subject { target.preview_form }
+
+      it { is_expected.to be_a_kind_of(Kintone::Command::PreviewForm) }
+    end
   end
 
   context 'APIトークン認証の時' do
@@ -533,6 +537,30 @@ describe Kintone::Api do
       let(:original_filename) { 'fileName.txt' }
 
       it { is_expected.to eq 'abc' }
+    end
+  end
+
+  describe '#new' do
+    let(:domain) { 'www.example.com' }
+    let(:user) { 'Administrator' }
+    let(:password) { 'cybozu' }
+
+    context 'ブロック引数が与えられていない時' do
+      subject { api.instance_variable_get(:@connection).proxy }
+      let(:api) { Kintone::Api.new(domain, user, password) }
+
+      it { is_expected.to be_nil }
+    end
+
+    context 'ブロック引数が与えられている時' do
+      subject { api.instance_variable_get(:@connection).proxy }
+      let(:api) do
+        Kintone::Api.new(domain, user, password) do |connection|
+          connection.proxy = 'http://127.0.0.1'
+        end
+      end
+
+      it { is_expected.to be_a Faraday::ProxyOptions }
     end
   end
 end
