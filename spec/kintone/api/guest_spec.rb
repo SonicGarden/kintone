@@ -23,7 +23,7 @@ describe Kintone::Api::Guest do
       )
         .with(
           headers: { 'X-Cybozu-Authorization' => 'QWRtaW5pc3RyYXRvcjpjeWJvenU=' },
-          query: params
+          body: params.to_json
         )
         .to_return(
           body: '{"abc":"def"}',
@@ -47,7 +47,7 @@ describe Kintone::Api::Guest do
         )
           .with(
             headers: { 'X-Cybozu-Authorization' => 'QWRtaW5pc3RyYXRvcjpjeWJvenU=' },
-            query: params
+            body: params.to_json
           )
           .to_return(
             body: '{"message":"不正なJSON文字列です。","id":"1505999166-897850006","code":"CB_IJ01"}',
@@ -279,5 +279,11 @@ describe Kintone::Api::Guest do
     subject { target.bulk }
 
     it { is_expected.to be_a_kind_of(Kintone::Command::BulkRequest) }
+  end
+
+  describe '#preview_form' do
+    subject { target.preview_form }
+
+    it { is_expected.to be_a_kind_of(Kintone::Command::PreviewForm) }
   end
 end
